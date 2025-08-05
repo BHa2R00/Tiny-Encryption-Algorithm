@@ -55,12 +55,28 @@ always@(negedge prstb or posedge pclk) begin
   else begin
     text_req <= cipher_ack;
     if(&{~text_req,cipher_ack}) begin
-      text[ 7: 0] <= $urandom_range("0","z");
-      text[15: 8] <= $urandom_range("0","z");
-      text[23:16] <= $urandom_range("0","z");
-      text[31:24] <= $urandom_range("0","z");
+      text[ 7: 0] <= $urandom_range("A","z");
+      text[15: 8] <= $urandom_range("A","z");
+      text[23:16] <= $urandom_range("A","z");
+      text[31:24] <= $urandom_range("A","z");
     end
   end
+end
+
+reg pass;
+reg [31:0] text_d, plain_d;
+always@(posedge text_req) 
+begin
+@(posedge pclk);
+text_d = text;
+@(posedge cipher_ack);
+@(posedge plain_ack);
+@(posedge pclk);
+plain_d = plain;
+if(text_d != plain_d) begin
+  pass = 0;
+  $write("%s != %s\n", text_d, plain_d);
+end
 end
 
 initial begin
@@ -76,11 +92,13 @@ prstb = 0;
 pwrite = 0;
 psel = 0;
 penable = 0;
+pass = 1;
 repeat(3) begin
   repeat(3) @(posedge pclk); prstb = 1;
   repeat(333) @(posedge clk);
   repeat(3) @(posedge pclk); prstb = 0;
 end
+if(pass) $write("PASS\n");
 $finish;
 end
 
