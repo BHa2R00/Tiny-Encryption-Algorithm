@@ -1,6 +1,8 @@
 # Tiny-Encryption-Algorithm
 Tiny Encryption Algorithm
 
+https://en.wikipedia.org/wiki/Tiny_Encryption_Algorithm
+
 
 ![format](https://upload.wikimedia.org/wikipedia/commons/a/a1/TEA_InfoBox_Diagram.png)
 
