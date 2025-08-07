@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdint.h>
-#define ROUND 5
+#define ROUND 2
+#define SHL 4
+#define SHR 5
 void tinyenc (uint16_t* dat, uint16_t* key) {
   uint16_t x = dat[0];
   uint16_t y = dat[1];
@@ -9,8 +11,8 @@ void tinyenc (uint16_t* dat, uint16_t* key) {
   uint8_t i;
   for(i=0;i<ROUND;i++){
     sum += delta;
-    x += ((y << 4) + key[0]) ^ (y + sum) ^ ((y >> 5) + key[1]);
-    y += ((x << 4) + key[2]) ^ (x + sum) ^ ((x >> 5) + key[3]);
+    x += ((y << SHL) + key[0]) ^ (y + sum) ^ ((y >> SHR) + key[1]);
+    y += ((x << SHL) + key[2]) ^ (x + sum) ^ ((x >> SHR) + key[3]);
     printf("sum = %x\n", sum);
   }
   dat[0] = x;
@@ -23,8 +25,8 @@ void tinydec (uint16_t* dat, uint16_t* key) {
   uint16_t sum = delta * ROUND;
   uint8_t i;
   for(i=0;i<ROUND;i++){
-    y -= ((x << 4) + key[2]) ^ (x + sum) ^ ((x >> 5) + key[3]);
-    x -= ((y << 4) + key[0]) ^ (y + sum) ^ ((y >> 5) + key[1]);
+    y -= ((x << SHL) + key[2]) ^ (x + sum) ^ ((x >> SHR) + key[3]);
+    x -= ((y << SHL) + key[0]) ^ (y + sum) ^ ((y >> SHR) + key[1]);
     sum -= delta;
     printf("sum = %x\n", sum);
   }
