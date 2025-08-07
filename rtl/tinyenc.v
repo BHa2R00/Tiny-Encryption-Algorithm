@@ -1,7 +1,8 @@
 module tinyenc 
 #(
   parameter [63:0] KEY   = 64'h816fc52b09e74da3, 
-  parameter [15:0] DELTA = 16'h9E37 
+  parameter [15:0] DELTA = 16'h1, 
+  parameter        SHIFT = 3 
 )
 (
   output            ack,
@@ -37,7 +38,7 @@ always@(negedge rstb or posedge clk) begin
     if(~psel_d[1]) begin
       if(ack) begin
         if(req) begin
-          i <= 5'd16;
+          i <= (1 << SHIFT);
           sum = 16'd0;
           x = wdata[15: 0];
           y = wdata[31:16];
