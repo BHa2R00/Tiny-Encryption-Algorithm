@@ -4,7 +4,7 @@ module tea_tb;
 
 parameter [63:0] KEY   = 64'h816fc52b09e74da3;
 parameter [15:0] DELTA = 16'h123;
-parameter        SHIFT = 3;
+parameter [ 7:0] ROUND =  8'd5;
 
 wire           plain_ack;
 wire    [31:0] plain;
@@ -23,7 +23,7 @@ reg            prstb, pclk;
 tinyenc #(
   .KEY(KEY), 
   .DELTA(DELTA),
-  .SHIFT(SHIFT)
+  .ROUND(ROUND)
 )
 u_cipher (
   .ack(cipher_ack),
@@ -41,7 +41,7 @@ u_cipher (
 tinydec #(
   .KEY(KEY), 
   .DELTA(DELTA),
-  .SHIFT(SHIFT)
+  .ROUND(ROUND)
 )
 u_plain (
   .ack(plain_ack),
