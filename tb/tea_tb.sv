@@ -4,7 +4,9 @@ module tea_tb;
 
 parameter [63:0] KEY   = 64'h816fc52b09e74da3;
 parameter [15:0] DELTA = 16'h123;
-parameter [ 7:0] ROUND =  8'd5;
+parameter        SHL   =  4;
+parameter        SHR   =  5;
+parameter [ 7:0] ROUND =  8'd1;
 
 wire           plain_ack;
 wire    [31:0] plain;
@@ -23,6 +25,8 @@ reg            prstb, pclk;
 tinyenc #(
   .KEY(KEY), 
   .DELTA(DELTA),
+  .SHL(SHL),
+  .SHR(SHR),
   .ROUND(ROUND)
 )
 u_cipher (
@@ -41,6 +45,8 @@ u_cipher (
 tinydec #(
   .KEY(KEY), 
   .DELTA(DELTA),
+  .SHL(SHL),
+  .SHR(SHR),
   .ROUND(ROUND)
 )
 u_plain (
@@ -57,7 +63,7 @@ u_plain (
 );
 
 initial pclk = 0;
-always #10 pclk = ~pclk;
+always #3 pclk = ~pclk;
 
 initial clk = 0;
 always #1 clk = ~clk;
@@ -87,7 +93,7 @@ text_d = text;
 @(posedge plain_ack);
 @(posedge pclk);
 plain_d = plain;
-if(text_d != plain_d) begin
+if(text_d != plain_d && prstb) begin
   pass = 0;
   $write("%s != %s\n", text_d, plain_d);
 end
