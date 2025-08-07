@@ -11,4 +11,4 @@ https://en.wikipedia.org/wiki/Tiny_Encryption_Algorithm
 ![format](https://github.com/BHa2R00/Tiny-Encryption-Algorithm/blob/main/doc/20250805121919_706x364_scrot.png)
 
 
-![format](https://github.com/BHa2R00/Tiny-Encryption-Algorithm/blob/main/20250805125449_977x352_scrot.png)
+![format](https://github.com/BHa2R00/Tiny-Encryption-Algorithm/blob/main/20250807150747_974x256_scrot.png)
