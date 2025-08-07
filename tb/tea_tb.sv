@@ -2,6 +2,10 @@
 `timescale 1ns/1ps
 module tea_tb;
 
+parameter [63:0] KEY   = 64'h816fc52b09e74da3;
+parameter [15:0] DELTA = 16'h123;
+parameter        SHIFT = 3;
+
 wire           plain_ack;
 wire    [31:0] plain;
 wire           cipher_ack;
@@ -16,7 +20,12 @@ reg     [31:0] paddr;
 reg            psel, penable;
 reg            prstb, pclk;
 
-tinyenc u_cipher (
+tinyenc #(
+  .KEY(KEY), 
+  .DELTA(DELTA),
+  .SHIFT(SHIFT)
+)
+u_cipher (
   .ack(cipher_ack),
   .rdata(cipher), 
   .wdata(text), 
@@ -29,7 +38,12 @@ tinyenc u_cipher (
   .prstb(prstb), .pclk(pclk)
 );
 
-tinydec u_plain (
+tinydec #(
+  .KEY(KEY), 
+  .DELTA(DELTA),
+  .SHIFT(SHIFT)
+)
+u_plain (
   .ack(plain_ack),
   .rdata(plain), 
   .wdata(cipher), 
