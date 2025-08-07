@@ -2,7 +2,9 @@ module tinyenc
 #(
   parameter [63:0] KEY   = 64'h816fc52b09e74da3, 
   parameter [15:0] DELTA = 16'h1, 
-  parameter [ 7:0] ROUND =  8'd5 
+  parameter        SHL   =  4, 
+  parameter        SHR   =  5, 
+  parameter [ 7:0] ROUND =  8'd1 
 )
 (
   output            ack,
@@ -47,8 +49,8 @@ always@(negedge rstb or posedge clk) begin
       else begin
         i <= i_next;
         sum = sum + delta;
-        x = x + (((y<<4) + k0) ^ (y + sum) ^ ((y>>5) + k1));
-        y = y + (((x<<4) + k2) ^ (x + sum) ^ ((x>>5) + k3));
+        x = x + (((y<<SHL) + k0) ^ (y + sum) ^ ((y>>SHR) + k1));
+        y = y + (((x<<SHL) + k2) ^ (x + sum) ^ ((x>>SHR) + k3));
       end
       if(ack_next) begin
         rdata[15: 0] <= x;
