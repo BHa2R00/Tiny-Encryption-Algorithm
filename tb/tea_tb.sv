@@ -2,18 +2,19 @@
 `timescale 1ns/1ps
 module tea_tb;
 
-parameter [63:0] KEY   = 64'h816fc52b09e74da3;
-parameter [15:0] DELTA = 16'h123;
 parameter        SHL   =  4;
 parameter        SHR   =  5;
 
-wire           plain_ack;
+reg     [15:0] delta;
+reg     [ 2:0] round;
+reg     [63:0] key;
+wire           plain_valid;
 wire    [31:0] plain;
-wire           cipher_ack;
+wire           cipher_valid;
 wire    [31:0] cipher;
 reg     [31:0] text;
-reg            text_req;
-reg            clk;
+reg            text_write;
+reg            clk, rstb;
 
 reg     [31:0] pwdata;
 reg            pwrite;
@@ -22,69 +23,46 @@ reg            psel, penable;
 reg            prstb, pclk;
 
 tinyenc #(
-  .KEY(KEY), 
-  .DELTA(DELTA),
   .SHL(SHL),
   .SHR(SHR)
 )
 u_cipher (
-  .ack(cipher_ack),
+  .delta(delta),
+  .round(round),
+  .key(key),
+  .valid(cipher_valid),
   .rdata(cipher), 
   .wdata(text), 
-  .req(text_req),
-  .clk(clk),
-  .pwdata(pwdata), 
-  .pwrite(pwrite), 
-  .paddr(paddr), 
-  .psel(psel), .penable(penable), 
-  .prstb(prstb), .pclk(pclk)
+  .write(text_write),
+  .clk(clk), .rstb(rstb) 
 );
 
 tinydec #(
-  .KEY(KEY), 
-  .DELTA(DELTA),
   .SHL(SHL),
   .SHR(SHR)
 )
 u_plain (
-  .ack(plain_ack),
+  .delta(delta),
+  .round(round),
+  .key(key),
+  .valid(plain_valid),
   .rdata(plain), 
   .wdata(cipher), 
-  .req(text_req),
-  .clk(clk),
-  .pwdata(pwdata), 
-  .pwrite(pwrite), 
-  .paddr(paddr), 
-  .psel(psel), .penable(penable), 
-  .prstb(prstb), .pclk(pclk)
+  .write(text_write),
+  .clk(clk), .rstb(rstb) 
 );
-
-initial pclk = 0;
-always #3 pclk = ~pclk;
 
 initial clk = 0;
 always #1 clk = ~clk;
 
-always@(negedge prstb or posedge pclk) begin
-  if(~prstb) begin
-    text_req <= 1'b0;
-  end
-  else begin
-    text_req <= cipher_ack;
-    if(&{~text_req,cipher_ack}) begin
-      text[ 7: 0] <= $urandom_range("A","z");
-      text[15: 8] <= $urandom_range("A","z");
-      text[23:16] <= $urandom_range("A","z");
-      text[31:24] <= $urandom_range("A","z");
-    end
-  end
+initial text_write = 0;
+always@(posedge clk) text_write = plain_valid;
+always@(posedge &{~text_write,plain_valid}) begin
+  text[ 7: 0] <= $urandom_range("A","z");
+  text[15: 8] <= $urandom_range("A","z");
+  text[23:16] <= $urandom_range("A","z");
+  text[31:24] <= $urandom_range("A","z");
 end
-
-task set_round(bit [31:0] round);
-  @(posedge pclk) psel = 1; pwrite = 1; paddr = 'hc; pwdata = round;
-  @(posedge pclk) penable = 1;
-  @(posedge pclk) psel = 0; penable = 0;
-endtask
 
 reg pass;
 reg [31:0] text_d, plain_d;
@@ -97,29 +75,26 @@ $dumpvars(0,tea_tb);
 $fsdbDumpfile("tea_tb.fsdb");
 $fsdbDumpvars(0,tea_tb);
 `endif
-prstb = 0;
-pwrite = 0;
-psel = 0;
-penable = 0;
+rstb = 0;
 pass = 1;
 repeat(33) begin
-  repeat(3) @(posedge pclk); prstb = 1;
-  set_round($urandom_range(0,7) | (1<<3));
+  round = $urandom_range(0,7);
+  key[31:00] = $urandom_range(0,'hffffffff);
+  key[63:32] = $urandom_range(0,'hffffffff);
+  delta = $urandom_range(0,'hffff);
+  repeat(3) @(posedge clk); rstb = 1;
   repeat(33) begin
-    @(posedge text_req) 
-    @(posedge pclk);
+    @(posedge text_write) 
     text_d = text;
-    @(posedge cipher_ack);
-    @(posedge plain_ack);
-    @(posedge pclk);
+    @(posedge cipher_valid);
+    @(posedge plain_valid);
     plain_d = plain;
-    if(text_d != plain_d && prstb) begin
+    if(text_d != plain_d && rstb) begin
       pass = 0;
       $write("%s != %s\n", text_d, plain_d);
     end
   end
-  set_round($urandom_range(0,7) &~(1<<3));
-  repeat(3) @(posedge pclk); prstb = 0;
+  repeat(3) @(posedge clk); rstb = 0;
 end
 if(pass) $write("PASS\n");
 $finish;
