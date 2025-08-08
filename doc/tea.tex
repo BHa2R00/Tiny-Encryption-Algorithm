@@ -55,9 +55,10 @@
 \hline
 reg                        &offset	 &description \\
 \hline
-key10                      &0x0      &key[31:00]  \\
+key10                      &0x0      &key[31: 0]  \\
 key32                      &0x4      &key[63:32]  \\
 delta                      &0x8      &delta       \\
+round                      &0xc      &round       \\
 \hline
 \end{tabular}
 \label{t1}
@@ -69,7 +70,7 @@ delta                      &0x8      &delta       \\
 \hline
 signal        &offset   &type &description   \\
 \hline
-key0           &[15:00]    &RW   &key[15:00] \\
+key0           &[15: 0]    &RW   &key[15: 0] \\
 key1           &[31:16]    &RW   &key[31:16] \\
 \hline
 \end{tabular}
@@ -82,7 +83,7 @@ key1           &[31:16]    &RW   &key[31:16] \\
 \hline
 signal        &offset   &type &description   \\
 \hline
-key2           &[15:00]    &RW   &key[47:32] \\
+key2           &[15: 0]    &RW   &key[47:32] \\
 key3           &[31:16]    &RW   &key[63:48] \\
 \hline
 \end{tabular}
@@ -96,12 +97,27 @@ key3           &[31:16]    &RW   &key[63:48] \\
 \hline
 signal        &offset   &type &description \\
 \hline
-delta         &[16:00]   &RW   &delta \\
+delta         &[16: 0]  &RW   &delta \\
 \hline
 \end{tabular}
 \label{t1}
 \caption{reg: delta}
 \end{table}
+
+
+\begin{table}[H]
+\begin{tabular}[width=\textwidth]{|l|l|l|l|}
+\hline
+signal        &offset   &type &description \\
+\hline
+round         &[2:0]    &RW  &cycle = $2^{round}$ \\
+enable        &[3]      &RW  &enable \\
+\hline
+\end{tabular}
+\label{t1}
+\caption{reg: round}
+\end{table}
+
 
 
 
