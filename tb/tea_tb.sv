@@ -6,7 +6,6 @@ parameter [63:0] KEY   = 64'h816fc52b09e74da3;
 parameter [15:0] DELTA = 16'h123;
 parameter        SHL   =  4;
 parameter        SHR   =  5;
-parameter [ 7:0] ROUND =  8'd1;
 
 wire           plain_ack;
 wire    [31:0] plain;
@@ -26,8 +25,7 @@ tinyenc #(
   .KEY(KEY), 
   .DELTA(DELTA),
   .SHL(SHL),
-  .SHR(SHR),
-  .ROUND(ROUND)
+  .SHR(SHR)
 )
 u_cipher (
   .ack(cipher_ack),
@@ -46,8 +44,7 @@ tinydec #(
   .KEY(KEY), 
   .DELTA(DELTA),
   .SHL(SHL),
-  .SHR(SHR),
-  .ROUND(ROUND)
+  .SHR(SHR)
 )
 u_plain (
   .ack(plain_ack),
@@ -83,22 +80,14 @@ always@(negedge prstb or posedge pclk) begin
   end
 end
 
+task set_round(bit [31:0] round);
+  @(posedge pclk) psel = 1; pwrite = 1; paddr = 'hc; pwdata = round;
+  @(posedge pclk) penable = 1;
+  @(posedge pclk) psel = 0; penable = 0;
+endtask
+
 reg pass;
 reg [31:0] text_d, plain_d;
-always@(posedge text_req) 
-begin
-@(posedge pclk);
-text_d = text;
-@(posedge cipher_ack);
-@(posedge plain_ack);
-@(posedge pclk);
-plain_d = plain;
-if(text_d != plain_d && prstb) begin
-  pass = 0;
-  $write("%s != %s\n", text_d, plain_d);
-end
-end
-
 initial begin
 `ifdef FST
 $dumpfile("tea_tb.fst");
@@ -113,9 +102,23 @@ pwrite = 0;
 psel = 0;
 penable = 0;
 pass = 1;
-repeat(3) begin
+repeat(33) begin
   repeat(3) @(posedge pclk); prstb = 1;
-  repeat(333) @(posedge clk);
+  set_round($urandom_range(0,7) | (1<<3));
+  repeat(33) begin
+    @(posedge text_req) 
+    @(posedge pclk);
+    text_d = text;
+    @(posedge cipher_ack);
+    @(posedge plain_ack);
+    @(posedge pclk);
+    plain_d = plain;
+    if(text_d != plain_d && prstb) begin
+      pass = 0;
+      $write("%s != %s\n", text_d, plain_d);
+    end
+  end
+  set_round($urandom_range(0,7) &~(1<<3));
   repeat(3) @(posedge pclk); prstb = 0;
 end
 if(pass) $write("PASS\n");
